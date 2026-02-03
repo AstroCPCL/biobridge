@@ -8,40 +8,35 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
-    
+
     model_config = SettingsConfigDict(
-        env_prefix="BIOBRIDGE_",
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore"
     )
-    
+
     # Application mode
     mode: Literal["sim", "gpio"] = "sim"
     debug: bool = False
     log_level: str = "INFO"
-    
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
-    
+
     # Database (separate prefix)
     database_url: str = "postgresql://biobridge:changeme@localhost:5432/biobridge"
-    
+
     # Acquisition
     acquisition_interval: int = 5  # seconds
     acquisition_buffer_size: int = 100
-    
+
     # GPIO settings (only used in gpio mode)
     gpio_i2c_bus: int = 1
     gpio_spi_bus: int = 0
     gpio_spi_device: int = 0
     gpio_sensor_addr_temp: int = 0x48
     gpio_sensor_addr_humidity: int = 0x40
-    
-    class Config:
-        # Allow both BIOBRIDGE_ and non-prefixed for some vars
-        env_prefix = ""
 
 
 class DatabaseSettings(BaseSettings):

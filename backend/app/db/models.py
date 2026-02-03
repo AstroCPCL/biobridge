@@ -60,8 +60,7 @@ class Measurement(Base):
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
-        index=True
+        server_default=func.now()
     )
     metadata_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
