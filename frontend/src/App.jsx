@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Activity, Thermometer, Droplets, FlaskConical, Sun, RefreshCw, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Activity, Thermometer, Droplets, FlaskConical, Sun, RefreshCw, AlertCircle, CheckCircle, ArrowLeft, LogOut } from 'lucide-react'
 import Landing from './Landing'
+import Login from './Login'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
 const REFRESH_INTERVAL = parseInt(import.meta.env.VITE_REFRESH_INTERVAL_MS) || 5000
@@ -15,7 +16,13 @@ const METRICS = {
   light_level: { icon: Sun, color: '#eab308', unit: 'lux', label: 'Light' },
 }
 
+// Check if user is authenticated
+const isAuthenticated = () => {
+  return localStorage.getItem('biobridge_auth') !== null
+}
+
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(isAuthenticated())
   const [currentView, setCurrentView] = useState('landing') // 'landing' or 'dashboard'
   const [status, setStatus] = useState(null)
   const [measurements, setMeasurements] = useState([])
@@ -92,9 +99,21 @@ function App() {
     fetchMeasurements()
   }
 
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('biobridge_auth')
+    setIsLoggedIn(false)
+    setCurrentView('landing')
+  }
+
+  // Show login if not authenticated
+  if (!isLoggedIn) {
+    return <Login onLogin={() => setIsLoggedIn(true)} />
+  }
+
   // Show landing page
   if (currentView === 'landing') {
-    return <Landing onNavigateToDashboard={() => setCurrentView('dashboard')} />
+    return <Landing onNavigateToDashboard={() => setCurrentView('dashboard')} onLogout={handleLogout} />
   }
 
   // Show dashboard
@@ -142,6 +161,14 @@ function App() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
           </button>
         </div>
       </header>

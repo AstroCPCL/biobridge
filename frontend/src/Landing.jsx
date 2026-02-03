@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Activity, Cpu, FlaskConical, ArrowRight, Zap, GitBranch, Layers, Radio, Microscope, TrendingUp, CheckCircle2, ExternalLink, AlertTriangle, Battery, Wifi, Gauge, Droplet, Shield, Box, Lightbulb, CircuitBoard, Waypoints, Code2, Monitor, Play, Server, Database } from 'lucide-react'
+import { Activity, Cpu, FlaskConical, ArrowRight, Zap, GitBranch, Layers, Radio, Microscope, TrendingUp, CheckCircle2, ExternalLink, AlertTriangle, Battery, Wifi, Gauge, Droplet, Shield, Box, Lightbulb, CircuitBoard, Waypoints, Code2, Monitor, Play, Server, Database, LogOut } from 'lucide-react'
 
-const Landing = ({ onNavigateToDashboard }) => {
+const Landing = ({ onNavigateToDashboard, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview')
 
   return (
@@ -19,13 +19,23 @@ const Landing = ({ onNavigateToDashboard }) => {
               <p className="text-xs text-slate-400">Strategic Decoupling Point</p>
             </div>
           </div>
-          <button
-            onClick={onNavigateToDashboard}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
-          >
-            Dashboard
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onNavigateToDashboard}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
+            >
+              Dashboard
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </nav>
 
