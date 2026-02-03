@@ -24,8 +24,9 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
-    # Database (separate prefix)
-    database_url: str = "postgresql://biobridge:changeme@localhost:5432/biobridge"
+    # Database - SQLite by default (no compilation needed)
+    # For PostgreSQL, set DATABASE_URL=postgresql://user:pass@host:5432/db
+    database_url: str = "sqlite:///./biobridge.db"
 
     # Acquisition
     acquisition_interval: int = 5  # seconds
@@ -41,13 +42,13 @@ class Settings(BaseSettings):
 
 class DatabaseSettings(BaseSettings):
     """Database-specific settings."""
-    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"
     )
-    
-    database_url: str = "postgresql://biobridge:changeme@localhost:5432/biobridge"
+
+    database_url: str = "sqlite:///./biobridge.db"
 
 
 class BackendSettings(BaseSettings):

@@ -1,5 +1,6 @@
 """
 BioBridge Database Configuration - Async SQLAlchemy
+Supports both PostgreSQL and SQLite
 """
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -8,22 +9,36 @@ from sqlalchemy.orm import DeclarativeBase
 from app.config import settings
 
 
-# Convert sync URL to async (postgresql -> postgresql+asyncpg)
 def get_async_database_url() -> str:
-    """Convert standard PostgreSQL URL to async version."""
+    """Convert database URL to async version."""
     url = settings.database_url
     if url.startswith("postgresql://"):
         return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("sqlite://"):
+        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
     return url
+
+
+def get_engine_kwargs() -> dict:
+    """Get engine kwargs based on database type."""
+    url = settings.database_url
+    if url.startswith("sqlite"):
+        # SQLite doesn't support pool settings
+        return {"echo": settings.debug}
+    else:
+        # PostgreSQL with connection pooling
+        return {
+            "echo": settings.debug,
+            "pool_pre_ping": True,
+            "pool_size": 5,
+            "max_overflow": 10
+        }
 
 
 # Create async engine
 engine = create_async_engine(
     get_async_database_url(),
-    echo=settings.debug,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10
+    **get_engine_kwargs()
 )
 
 # Session factory

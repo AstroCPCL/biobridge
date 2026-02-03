@@ -8,11 +8,14 @@ pydantic-settings==2.1.0
 
 # Database
 sqlalchemy==2.0.25
-psycopg2-binary==2.9.9
+aiosqlite==0.19.0
 alembic==1.13.1
 
+# PostgreSQL (optional - uncomment if using PostgreSQL)
+# psycopg2-binary==2.9.9
+# asyncpg==0.29.0
+
 # Async support
-asyncpg==0.29.0
 httpx==0.26.0
 
 # Utilities
