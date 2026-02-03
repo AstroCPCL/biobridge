@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Activity, Thermometer, Droplets, FlaskConical, Sun, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react'
+import { Activity, Thermometer, Droplets, FlaskConical, Sun, RefreshCw, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
+import Landing from './Landing'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
 const REFRESH_INTERVAL = parseInt(import.meta.env.VITE_REFRESH_INTERVAL_MS) || 5000
@@ -15,6 +16,7 @@ const METRICS = {
 }
 
 function App() {
+  const [currentView, setCurrentView] = useState('landing') // 'landing' or 'dashboard'
   const [status, setStatus] = useState(null)
   const [measurements, setMeasurements] = useState([])
   const [latestValues, setLatestValues] = useState({})
@@ -40,22 +42,22 @@ function App() {
       const res = await fetch(`${API_URL}/api/v1/measurements?page_size=100`)
       if (!res.ok) throw new Error('Failed to fetch measurements')
       const data = await res.json()
-      
+
       // Process data for charts
       const grouped = {}
       const latest = {}
-      
+
       data.items.forEach(m => {
         const time = new Date(m.timestamp).toLocaleTimeString()
         if (!grouped[time]) grouped[time] = { time }
         grouped[time][m.metric_name] = m.value
-        
+
         // Track latest value per metric
         if (!latest[m.metric_name] || new Date(m.timestamp) > new Date(latest[m.metric_name].timestamp)) {
           latest[m.metric_name] = m
         }
       })
-      
+
       setMeasurements(Object.values(grouped).reverse())
       setLatestValues(latest)
       setLastUpdate(new Date())
@@ -68,18 +70,20 @@ function App() {
     }
   }
 
-  // Initial fetch and interval
+  // Initial fetch and interval (only when on dashboard)
   useEffect(() => {
-    fetchStatus()
-    fetchMeasurements()
-    
-    const interval = setInterval(() => {
+    if (currentView === 'dashboard') {
       fetchStatus()
       fetchMeasurements()
-    }, REFRESH_INTERVAL)
-    
-    return () => clearInterval(interval)
-  }, [])
+
+      const interval = setInterval(() => {
+        fetchStatus()
+        fetchMeasurements()
+      }, REFRESH_INTERVAL)
+
+      return () => clearInterval(interval)
+    }
+  }, [currentView])
 
   // Manual refresh
   const handleRefresh = () => {
@@ -88,22 +92,36 @@ function App() {
     fetchMeasurements()
   }
 
+  // Show landing page
+  if (currentView === 'landing') {
+    return <Landing onNavigateToDashboard={() => setCurrentView('dashboard')} />
+  }
+
+  // Show dashboard
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6">
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+          <button
+            onClick={() => setCurrentView('landing')}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Landing
+          </button>
+
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
             <Activity className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">BioBridge</h1>
+            <h1 className="text-2xl font-bold">BioBridge Dashboard</h1>
             <p className="text-slate-400 text-sm">
               {status ? `Mode: ${status.mode}` : 'Loading...'}
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
           {/* Status indicator */}
           <div className="flex items-center gap-2">
@@ -116,7 +134,7 @@ function App() {
               {lastUpdate ? `Updated: ${lastUpdate.toLocaleTimeString()}` : ''}
             </span>
           </div>
-          
+
           <button
             onClick={handleRefresh}
             disabled={loading}
@@ -141,7 +159,7 @@ function App() {
         {Object.entries(METRICS).map(([key, config]) => {
           const value = latestValues[key]
           const Icon = config.icon
-          
+
           return (
             <div
               key={key}
