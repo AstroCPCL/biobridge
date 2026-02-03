@@ -1,0 +1,66 @@
+# Docker Compose for Tailscale Funnel Deployment
+# Usage: docker compose -f docker-compose.tailscale.yml up -d --build
+#
+# This configuration:
+# - Serves frontend from backend (single port exposure)
+# - Uses relative API URLs (no CORS issues)
+# - Only exposes port 8000 for Tailscale Funnel
+
+version: "3.8"
+
+services:
+  # ===========================================================================
+  # DATABASE (PostgreSQL)
+  # ===========================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: biobridge-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-biobridge}
+      POSTGRES_USER: ${POSTGRES_USER:-biobridge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-biobridge} -d ${POSTGRES_DB:-biobridge}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # BACKEND (FastAPI + Frontend static files)
+  # ===========================================================================
+  backend:
+    build:
+      context: ../..
+      dockerfile: infra/docker/backend.Dockerfile
+    container_name: biobridge-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - BIOBRIDGE_MODE=${BIOBRIDGE_MODE:-sim}
+      - BIOBRIDGE_DEBUG=${BIOBRIDGE_DEBUG:-false}
+      - BIOBRIDGE_LOG_LEVEL=${BIOBRIDGE_LOG_LEVEL:-INFO}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-biobridge}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-biobridge}
+      - BACKEND_HOST=0.0.0.0
+      - BACKEND_PORT=8000
+      - ACQUISITION_INTERVAL_SECONDS=${ACQUISITION_INTERVAL_SECONDS:-5}
+    ports:
+      - "8000:8000"  # Only port needed for Tailscale Funnel
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  default:
+    name: biobridge-network
