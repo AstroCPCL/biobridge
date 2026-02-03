@@ -4,12 +4,18 @@ BioBridge Backend - Main Application Entry Point
 
 import asyncio
 import logging
+from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.config import settings
+
+# Static files directory (frontend build)
+STATIC_DIR = Path(__file__).parent.parent / "static"
 from app.api.v1.routes import router as api_router
 from app.db.database import engine, Base
 from app.services.acquisition.manager import AcquisitionManager
@@ -89,9 +95,23 @@ async def health_check():
     }
 
 
-@app.get("/")
-async def root():
-    """Root endpoint with API info."""
+# =============================================================================
+# Static Files & SPA Routing
+# =============================================================================
+
+# Mount static assets (JS, CSS, images)
+if STATIC_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+
+
+@app.get("/{full_path:path}")
+async def serve_spa(request: Request, full_path: str):
+    """Serve the SPA frontend for all non-API routes."""
+    # If it's an API route, this won't be reached (API routes are registered first)
+    index_file = STATIC_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    # Fallback for API-only mode
     return {
         "name": "BioBridge API",
         "version": "0.1.0",
