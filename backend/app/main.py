@@ -102,6 +102,8 @@ async def health_check():
 # Mount static assets (JS, CSS, images)
 if STATIC_DIR.exists():
     app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+    if (STATIC_DIR / "images").exists():
+        app.mount("/images", StaticFiles(directory=STATIC_DIR / "images"), name="images")
 
 
 @app.get("/{full_path:path}")
