@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(.venv/bin/pip list:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/cpetersen/Library/CloudStorage/OneDrive-UniversidadSanSebastian/Documentos/0_Cowork USS/1_Proyectos/1_Dashboards/2_Proyectos/09_Periodos_De_Postgrados_Grande",
+      "/Users/cpetersen/Library/CloudStorage/OneDrive-UniversidadSanSebastian/Documentos/2. Documentación General/7. Documentación Andrés/Imágenes"
     ]
   }
 }
